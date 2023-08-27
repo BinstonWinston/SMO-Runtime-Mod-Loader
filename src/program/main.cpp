@@ -282,7 +282,9 @@ extern "C" void exl_main(void *x0, void *x1) {
     nn::os::SetUserExceptionHandler(exception_handler, nullptr, 0, nullptr);
     installExceptionStub();
 
-    Logger::instance().init(LOGGER_IP, 3080);
+#ifdef LOGGER_IP
+    R_ABORT_UNLESS(Logger::instance().init(LOGGER_IP, 3080).value);
+#endif
 
     runCodePatches();
 

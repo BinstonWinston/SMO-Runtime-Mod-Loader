@@ -15,6 +15,9 @@
         "atomic": "cpp",
         "cstdarg": "cpp"
     },
-    "cmake.configureOnOpen": false,
-    "C_Cpp.errorSquiggles": "Enabled"
+    "cmake.configureOnOpen": true,
+    "cmake.environment": {
+        "DEVKITPRO": "/opt/devkitpro",
+        "CMAKE_TOOLCHAIN_FILE": "cmake/toolchain.cmake"
+    },
 }
