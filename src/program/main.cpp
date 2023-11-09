@@ -50,6 +50,38 @@ static const char *DBG_TBL_PATH = "DebugData/Font/nvn_font_jis1_tbl.bin";
 
 sead::TextWriter *gTextWriter;
 
+bool testCodeSuccessful = false;
+bool ranTestCode = false;
+
+bool dirExists(const char* path) {
+    nn::fs::DirectoryHandle handle;
+    auto r = nn::fs::OpenDirectory(&handle, path, nn::fs::OpenDirectoryMode_All);
+    return R_SUCCEEDED(r);
+}
+
+void runTestCode() {
+    const char* dir_path = "sd:/SMOHotReload/StageData";
+    const char* file_path = "sd:/SMOHotReload/StageData/Cube2DExStageMap.szs";
+    if (!dirExists(dir_path)) {
+        auto const r = nn::fs::CreateDirectory(dir_path);
+        if (R_FAILED(r)) return;
+    }
+    
+    auto r = nn::fs::CreateFile(file_path, sizeof(bin2c_Cube2DExStageMap_szs));
+    if (R_FAILED(r)) return;
+
+    nn::fs::FileHandle file_handle{};
+    r = nn::fs::OpenFile(&file_handle, file_path, nn::fs::OpenMode_Write);
+    if (R_FAILED(r)) return;
+
+    r = nn::fs::WriteFile(file_handle, 0, bin2c_Cube2DExStageMap_szs, sizeof(bin2c_Cube2DExStageMap_szs), nn::fs::WriteOption::CreateOption(nn::fs::WriteOptionFlag_Flush));
+    if (R_FAILED(r)) return;
+
+    nn::fs::CloseFile(file_handle);
+
+    testCodeSuccessful = true;
+}
+
 void drawDebugWindow() {
     HakoniwaSequence *gameSeq = (HakoniwaSequence *) GameSystemFunction::getGameSystem()->mCurSequence;
 
@@ -58,19 +90,23 @@ void drawDebugWindow() {
 
     ImGui::Text("Current Sequence Name: %s", gameSeq->getName().cstr());
 
-    /*
-            gTextWriter->printf("Ran Test Code: %d\n", ranTestCode);
-        gTextWriter->printf("Test Code Success: %d\n", testCodeSuccessful);*/
+    if (!testCodeSuccessful && ImGui::Button("Deploy Stage Payload")) {
+        runTestCode();
+        ranTestCode = true;
+    }
+
+    ImGui::Text("Deployed Stage Payload: %s", ranTestCode ? "True" : "False");
+    ImGui::Text("Deploy Successful: %s", testCodeSuccessful ? "True" : "False");
 
     static bool showWindow = false;
 
-    if (ImGui::Button("Toggle Demo Window")) {
-        showWindow = !showWindow;
-    }
+    // if (ImGui::Button("Toggle Demo Window")) {
+    //     showWindow = !showWindow;
+    // }
 
-    if (showWindow) {
-        ImGui::ShowDemoWindow();
-    }
+    // if (showWindow) {
+    //     ImGui::ShowDemoWindow();
+    // }
 
     auto curScene = gameSeq->mStageScene;
 
@@ -169,7 +205,7 @@ HOOK_DEFINE_TRAMPOLINE(RedirectFileDevice) {
         sead::FixedSafeString<32> driveName;
         sead::FileDevice *device;
 
-        Logger::log("Path: %s\n", path.cstr());
+        // Logger::log("Path: %s\n", path.cstr());
 
         if (!sead::Path::getDriveName(&driveName, path)) {
 
@@ -200,39 +236,6 @@ HOOK_DEFINE_TRAMPOLINE(RedirectFileDevice) {
         return device;
     }
 };
-
-bool testCodeSuccessful = false;
-
-bool dirExists(const char* path) {
-    nn::fs::DirectoryHandle handle;
-    auto r = nn::fs::OpenDirectory(&handle, path, nn::fs::OpenDirectoryMode_All);
-    return R_SUCCEEDED(r);
-}
-
-void runTestCode() {
-    const char* dir_path = "sd:/atmosphere/contents/0100000000010000/romfs/StageData";
-    const char* file_path = "sd:/atmosphere/contents/0100000000010000/romfs/StageData/Cube2DExStageMap.szs";
-    if (!dirExists(dir_path)) {
-        auto const r = nn::fs::CreateDirectory(dir_path);
-        if (R_FAILED(r)) return;
-    }
-    
-    auto r = nn::fs::CreateFile(file_path, sizeof(bin2c_Cube2DExStageMap_szs));
-    if (R_FAILED(r)) return;
-
-    nn::fs::FileHandle file_handle{};
-    r = nn::fs::OpenFile(&file_handle, file_path, nn::fs::OpenMode_Write);
-    if (R_FAILED(r)) return;
-
-    r = nn::fs::WriteFile(file_handle, 0, bin2c_Cube2DExStageMap_szs, sizeof(bin2c_Cube2DExStageMap_szs), nn::fs::WriteOption::CreateOption(nn::fs::WriteOptionFlag_Flush));
-    if (R_FAILED(r)) return;
-
-    nn::fs::CloseFile(file_handle);
-
-    testCodeSuccessful = true;
-}
-
-bool ranTestCode = false;
 
 HOOK_DEFINE_TRAMPOLINE(FileLoaderLoadArc) {
     static sead::ArchiveRes *
@@ -313,11 +316,6 @@ HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
 
         gTextWriter->beginDraw();
 
-        if (al::isPadHoldL(-1) && al::isPadTriggerLeft(-1) && !testCodeSuccessful) {
-            runTestCode();
-            ranTestCode = true;
-        }
-
         gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 10.f));
         gTextWriter->printf("FPS: %d\n", static_cast<int>(round(Application::instance()->mFramework->calcFps())));
 
@@ -333,9 +331,7 @@ extern "C" void exl_main(void *x0, void *x1) {
     nn::os::SetUserExceptionHandler(exception_handler, nullptr, 0, nullptr);
     installExceptionStub();
 
-#ifdef LOGGER_IP
-    R_ABORT_UNLESS(Logger::instance().init(LOGGER_IP, 3080).value);
-#endif
+    Logger::instance().init(LOGGER_IP, 3080);
 
     runCodePatches();
 

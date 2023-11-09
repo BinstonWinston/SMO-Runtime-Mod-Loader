@@ -112,7 +112,7 @@ CompiledData NOINLINE CreateShaderBinary(GLSLCoutput *compileData, const char *s
     if (outputFile) {
 
         char fullPath[0x40] = {};
-        createPath(fullPath, "sd:/smo/shaders", shaderName, ".bin");
+        createPath(fullPath, "sd:/SMOHotReload/shaders", shaderName, ".bin");
 
         R_ABORT_UNLESS(FsHelper::writeFileToPath(binaryBuffer, binarySize, fullPath))
 
@@ -216,10 +216,10 @@ CompiledData ImguiShaderCompiler::CompileShader(const char *shaderName) {
     const char *shaders[6];
     NVNshaderStage stages[6];
 
-    char vshPath[0x40] = {}; //"sd:/smo/shaders/sources/imgui_vsh.glsl";
-    createPath(vshPath, "sd:/smo/shaders/sources", shaderName, "_vsh.glsl");
-    char fshPath[0x40] = {}; //"sd:/smo/shaders/sources/imgui_fsh.glsl";
-    createPath(fshPath, "sd:/smo/shaders/sources", shaderName, "_fsh.glsl");
+    char vshPath[0x40] = {}; //"sd:/SMOHotReload/shaders/sources/imgui_vsh.glsl";
+    createPath(vshPath, "sd:/SMOHotReload/shaders/sources", shaderName, "_vsh.glsl");
+    char fshPath[0x40] = {}; //"sd:/SMOHotReload/shaders/sources/imgui_fsh.glsl";
+    createPath(fshPath, "sd:/SMOHotReload/shaders/sources", shaderName, "_fsh.glsl");
 
     shaders[0] = GetShaderSource(vshPath);
     stages[0] = NVNshaderStage::NVN_SHADER_STAGE_VERTEX;

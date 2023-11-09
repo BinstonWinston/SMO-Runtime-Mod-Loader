@@ -4,7 +4,7 @@ EXEFS_DIR="/mnt/c/Users/Binston/AppData/Roaming/Ryujinx/sdcard/atmosphere/conten
 ROMFS_DIR="/mnt/c/Users/Binston/AppData/Roaming/Ryujinx/sdcard/atmosphere/contents/0100000000010000"
 
 mkdir -p "$EXEFS_DIR"
-rm -r "/mnt/c/Users/Binston/AppData/Roaming/Ryujinx/sdcard/atmosphere/contents/0100000000010000/romfs/StageData"
+rm -r "/mnt/c/Users/Binston/AppData/Roaming/Ryujinx/sdcard/SMOHotReload/StageData"
 cp "$BUILD_DIR/main.npdm" "$EXEFS_DIR"
 cp "$BUILD_DIR/subsdk9" "$EXEFS_DIR"
 echo "Done copying to exefs folder"
