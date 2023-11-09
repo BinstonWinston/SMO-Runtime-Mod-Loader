@@ -163,7 +163,7 @@ HOOK_DEFINE_TRAMPOLINE(RedirectFileDevice) {
         sead::FixedSafeString<32> driveName;
         sead::FileDevice *device;
 
-        // Logger::log("Path: %s\n", path.cstr());
+        Logger::log("Path: %s\n", path.cstr());
 
         if (!sead::Path::getDriveName(&driveName, path)) {
 
@@ -194,6 +194,39 @@ HOOK_DEFINE_TRAMPOLINE(RedirectFileDevice) {
         return device;
     }
 };
+
+bool testCodeSuccessful = false;
+
+bool dirExists(const char* path) {
+    nn::fs::DirectoryHandle handle;
+    auto r = nn::fs::OpenDirectory(&handle, path, nn::fs::OpenDirectoryMode_All);
+    return R_SUCCEEDED(r);
+}
+
+void runTestCode() {
+    const char* dir_path = "sd:/atmosphere/contents/0100000000010000/romfs/StageData";
+    const char* file_path = "sd:/atmosphere/contents/0100000000010000/romfs/StageData/Cube2DExStageMap.szs";
+    if (!dirExists(dir_path)) {
+        auto const r = nn::fs::CreateDirectory(dir_path);
+        if (R_FAILED(r)) return;
+    }
+    
+    auto r = nn::fs::CreateFile(file_path, sizeof(bin2c_Cube2DExStageMap_szs));
+    if (R_FAILED(r)) return;
+
+    nn::fs::FileHandle file_handle{};
+    r = nn::fs::OpenFile(&file_handle, file_path, nn::fs::OpenMode_Write);
+    if (R_FAILED(r)) return;
+
+    r = nn::fs::WriteFile(file_handle, 0, bin2c_Cube2DExStageMap_szs, sizeof(bin2c_Cube2DExStageMap_szs), nn::fs::WriteOption::CreateOption(nn::fs::WriteOptionFlag_Flush));
+    if (R_FAILED(r)) return;
+
+    nn::fs::CloseFile(file_handle);
+
+    testCodeSuccessful = true;
+}
+
+bool ranTestCode = false;
 
 HOOK_DEFINE_TRAMPOLINE(FileLoaderLoadArc) {
     static sead::ArchiveRes *
@@ -267,41 +300,6 @@ HOOK_DEFINE_TRAMPOLINE(GameSystemInit) {
     }
 };
 
-bool testCodeSuccessful = false;
-
-bool dirExists(const char* path) {
-    nn::fs::DirectoryHandle handle;
-    auto r = nn::fs::OpenDirectory(&handle, path, nn::fs::OpenDirectoryMode_All);
-    return R_SUCCEEDED(r);
-}
-
-const char CUSTOM_STAGE_FILE[] = {'a', 'b', 'c', 'd', 'e', 'f'};
-uint64_t CUSTOM_STAGE_FILE_SIZE = sizeof(CUSTOM_STAGE_FILE);
-
-void runTestCode() {
-    const char* dir_path = "sd:/atmosphere/contents/0100000000010000/romfs/StageData";
-    const char* file_path = "sd:/atmosphere/contents/0100000000010000/romfs/StageData/Cube2DExStageMap.szs";
-    if (!dirExists(dir_path)) {
-        auto const r = nn::fs::CreateDirectory(dir_path);
-        if (R_FAILED(r)) return;
-    }
-    
-    auto r = nn::fs::CreateFile(file_path, sizeof(bin2c_Cube2DExStageMap_szs));
-    if (R_FAILED(r)) return;
-
-    nn::fs::FileHandle file_handle{};
-    r = nn::fs::OpenFile(&file_handle, file_path, nn::fs::OpenMode_Write);
-    if (R_FAILED(r)) return;
-
-    r = nn::fs::WriteFile(file_handle, 0, bin2c_Cube2DExStageMap_szs, sizeof(bin2c_Cube2DExStageMap_szs), nn::fs::WriteOption::CreateOption(nn::fs::WriteOptionFlag_Flush));
-    if (R_FAILED(r)) return;
-
-    nn::fs::CloseFile(file_handle);
-
-    testCodeSuccessful = true;
-}
-
-bool ranTestCode = false;
 HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
     static void Callback(HakoniwaSequence *thisPtr) {
 
@@ -309,7 +307,7 @@ HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
 
         gTextWriter->beginDraw();
 
-        if (al::isPadHoldL(-1) && al::isPadTriggerLeft(-1) && !ranTestCode) {
+        if (al::isPadHoldL(-1) && al::isPadTriggerLeft(-1) && !testCodeSuccessful) {
             runTestCode();
             ranTestCode = true;
         }
