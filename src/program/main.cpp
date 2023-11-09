@@ -23,6 +23,8 @@
 #include <al/Library/File/FileLoader.h>
 #include <al/Library/File/FileUtil.h>
 
+#include <al/Library/Controller/JoyPadUtil.h>
+
 #include <game/StageScene/StageScene.h>
 #include <game/System/GameSystem.h>
 #include <game/System/Application.h>
@@ -55,6 +57,10 @@ void drawDebugWindow() {
     ImGui::SetWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
 
     ImGui::Text("Current Sequence Name: %s", gameSeq->getName().cstr());
+
+    /*
+            gTextWriter->printf("Ran Test Code: %d\n", ranTestCode);
+        gTextWriter->printf("Test Code Success: %d\n", testCodeSuccessful);*/
 
     static bool showWindow = false;
 
@@ -314,8 +320,6 @@ HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
 
         gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 10.f));
         gTextWriter->printf("FPS: %d\n", static_cast<int>(round(Application::instance()->mFramework->calcFps())));
-        gTextWriter->printf("Ran Test Code: %d\n", ranTestCode);
-        gTextWriter->printf("Test Code Success: %d\n", testCodeSuccessful);
 
         gTextWriter->endDraw();
 
